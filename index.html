@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>სწავლა მხიარულად</title>
+    <style>
+        /* ==================== GLOBAL STYLES & BACKGROUND ==================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: #090a10;
+            overflow-x: hidden;
+            position: relative;
+            color: #fff;
+        }
+
+        /* iOS 26 Liquid Glass Background Blobs */
+        .ambient-blob {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.55;
+            animation: float 14s infinite alternate ease-in-out;
+            z-index: 1;
+        }
+
+        .blob-1 {
+            width: 450px;
+            height: 450px;
+            background: linear-gradient(135deg, #a855f7, #ec4899);
+            top: -100px;
+            left: -100px;
+        }
+
+        .blob-2 {
+            width: 500px;
+            height: 500px;
+            background: linear-gradient(135deg, #06b6d4, #3b82f6);
+            bottom: -100px;
+            right: -100px;
+            animation-delay: -7s;
+        }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(60px, 50px) scale(1.2); }
+        }
+
+        /* ==================== LIQUID GLASS CARD ==================== */
+        .glass-card {
+            position: relative;
+            z-index: 10;
+            width: 90%;
+            max-width: 620px;
+            padding: 35px;
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(40px) saturate(200%);
+            -webkit-backdrop-filter: blur(40px) saturate(200%);
+            border-radius: 32px;
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            box-shadow: 0 30px 70px rgba(0, 0, 0, 0.6),
+                        inset 0 1px 2px rgba(255, 255, 255, 0.35);
+            text-align: center;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* Header Bar (User + Logout) */
+        .user-bar {
+            display: none;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.95rem;
+            color: #e2e8f0;
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px 18px;
+            border-radius: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .user-bar span {
+            color: #c084fc;
+            font-weight: 700;
+        }
+
+        .logout-btn {
+            background: rgba(239, 68, 68, 0.25);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #fca5a5;
+            padding: 6px 14px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .logout-btn:hover {
+            background: rgba(239, 68, 68, 0.45);
+            color: #fff;
+            box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
+        }
+
+        h1 {
+            font-size: 2.3rem;
+            margin-bottom: 20px;
+            letter-spacing: -0.5px;
+            background: linear-gradient(180deg, #ffffff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        h2 {
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 16px 20px;
+            margin: 10px 0 18px 0;
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 16px;
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+            backdrop-filter: blur(10px);
+            transition: 0.3s;
+        }
+
+        select option {
+            background: #12131c;
+            color: #fff;
+        }
+
+        input:focus, select:focus {
+            background: rgba(255, 255, 255, 0.14);
+            border-color: #c084fc;
+            box-shadow: 0 0 20px rgba(192, 132, 252, 0.4);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #c084fc, #6366f1);
+            color: white;
+            font-size: 1.05rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(192, 132, 252, 0.3);
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(192, 132, 252, 0.5);
+        }
+
+        /* სპეციალური Notification-ის ჩართვის ღილაკის სტილი */
+        .btn-notify {
+            background: rgba(34, 197, 94, 0.2);
+            border: 1px solid rgba(34, 197, 94, 0.4);
+            color: #4ade80;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-notify:hover {
+            background: rgba(34, 197, 94, 0.35);
+            box-shadow: 0 0 20px rgba(34, 197, 94, 0.4);
+            color: #fff;
+        }
+
+        .toggle-link {
+            margin-top: 15px;
+            display: inline-block;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 0.9rem;
+            text-decoration: underline;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+            animation: fadeIn 0.4s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.98); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* ==================== QUIZ & TIMER SCREEN ==================== */
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+            color: #94a3b8;
+        }
+
+        /* Timer UI */
+        .timer-container {
+            margin-bottom: 20px;
+        }
+
+        .timer-bar-bg {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .timer-bar-fill {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #22c55e, #eab308, #ef4444);
+            border-radius: 10px;
+            transition: width 0.1s linear;
+        }
+
+        .timer-text {
+            font-size: 0.9rem;
+            margin-top: 6px;
+            color: #cbd5e1;
+            font-weight: 600;
+        }
+
+        .timeout-message {
+            display: none;
+            margin-top: 10px;
+            color: #ef4444;
+            font-weight: bold;
+            font-size: 1.1rem;
+            animation: pulse 0.5s infinite alternate;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin-top: 15px;
+        }
+
+        .option-btn {
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            color: #fff;
+            font-size: 1.05rem;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.25s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .option-btn:hover {
+            background: rgba(255, 255, 255, 0.18);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .option-btn.correct {
+            background: rgba(34, 197, 94, 0.4) !important;
+            border-color: #22c55e !important;
+            box-shadow: 0 0 20px rgba(34, 197, 94, 0.4);
+        }
+
+        .option-btn.wrong {
+            background: rgba(239, 68, 68, 0.4) !important;
+            border-color: #ef4444 !important;
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+        }
+
+        /* ==================== FINAL ANIMATED SCREEN ==================== */
+        .animated-congrats {
+            font-size: 1.5rem;
+            line-height: 1.6;
+            margin: 25px 0;
+            background: linear-gradient(90deg, #f43f5e, #c084fc, #3b82f6, #f43f5e);
+            background-size: 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradientMove 4s infinite linear, pulse 2s infinite ease-in-out;
+            font-weight: bold;
+        }
+
+        @keyframes gradientMove {
+            0% { background-position: 0%; }
+            100% { background-position: 100%; }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        /* ==================== GLOBAL AUTHOR FOOTER ==================== */
+        .global-author {
+            position: relative;
+            z-index: 10;
+            margin-top: 25px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: #c084fc;
+            text-shadow: 0 0 12px rgba(192, 132, 252, 0.6);
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ambient-blob blob-1"></div>
+    <div class="ambient-blob blob-2"></div>
+
+    <div class="glass-card">
+        <!-- მომხმარებლის მისალმება + Logout -->
+        <div id="user-bar" class="user-bar">
+            <div>გამარჯობა, <span id="user-name-display">მომხმარებელო</span>!</div>
+            <button class="logout-btn" onclick="handleLogout()">გამოსვლა</button>
+        </div>
+
+        <h1>სწავლა მხიარულად</h1>
+
+        <!-- 1. ავტორიზაცია / რეგისტრაცია -->
+        <div id="auth-screen" class="screen active">
+            <h2 id="auth-title">ავტორიზაცია</h2>
+            <input type="text" id="username" placeholder="შეიყვანე შენი სახელი">
+            <input type="password" id="password" placeholder="პაროლი">
+            
+            <!-- 🔔 ახალი სპეციალური ღილაკი NOTIFICATION-ის ჩასართავად -->
+            <button class="btn btn-notify" onclick="enableQuizNotifications()">🔔 შეტყობინებების ჩართვა</button>
+
+            <button class="btn" onclick="handleAuth()">შესვლა</button>
+            <span class="toggle-link" onclick="toggleAuthMode()" id="auth-toggle">არ გაქვს ანგარიში? დარეგისტრირდი</span>
+        </div>
+
+        <!-- 2. პარამეტრების არჩევა -->
+        <div id="selection-screen" class="screen">
+            <h2>აირჩიე პარამეტრები</h2>
+            <label style="display:block; text-align:left; margin-bottom:5px; color:#94a3b8;">კლასი:</label>
+            <select id="grade-select">
+                <option value="1">I კლასი</option>
+                <option value="2">II კლასი</option>
+                <option value="3">III კლასი</option>
+                <option value="4">IV კლასი</option>
+            </select>
+
+            <label style="display:block; text-align:left; margin-bottom:5px; color:#94a3b8;">საგანი:</label>
+            <select id="subject-select">
+                <option value="math">მათემატიკა</option>
+                <option value="geo">ქართული</option>
+            </select>
+
+            <button class="btn" onclick="startQuiz()">ქვიზის დაწყება</button>
+        </div>
+
+        <!-- 3. ქვიზის ეკრანი (ტაიმერით) -->
+        <div id="quiz-screen" class="screen">
+            <div class="quiz-header">
+                <span id="question-count">კითხვა 1 / 20</span>
+                <span id="subject-label"></span>
+            </div>
+
+            <!-- ტაიმერის ბარი -->
+            <div class="timer-container">
+                <div class="timer-bar-bg">
+                    <div id="timer-bar-fill" class="timer-bar-fill"></div>
+                </div>
+                <div id="timer-text" class="timer-text">დარჩენილი დრო: 10 წამი</div>
+                <div id="timeout-message" class="timeout-message">დრო ამოიწურა! გოლი მიდი ამ კითხვაზე!</div>
+            </div>
+
+            <h2 id="question-text">კითხვის ტექსტი...</h2>
+            <div class="options-grid" id="options-container"></div>
+        </div>
+
+        <!-- 4. ფინალური ეკრანი -->
+        <div id="final-screen" class="screen">
+            <div class="animated-congrats">
+                ყოჩაღ! შენ დღევანდელი ქვიზი გაიარე, დაელოდე ხვალინდელ ქვიზს!
+            </div>
+            <button class="btn" onclick="restart()">თავიდან დაწყება</button>
+        </div>
+    </div>
+
+    <!-- მუდმივი ავტორის წარწერა -->
+    <div class="global-author">
+        made by: ALEKSANDRE ABESADZE
+    </div>
+
+    <script>
+        // ==================== PWA ANDROID SERVICE WORKER FIX ====================
+        // Android PWA-ზე Notification-ების გამოსაჩენად აუცილებელია Service Worker
+        if ('serviceWorker' in navigator) {
+            const swCode = `
+                self.addEventListener('install', e => self.skipWaiting());
+                self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
+            `;
+            const blob = new Blob([swCode], { type: 'application/javascript' });
+            const swUrl = URL.createObjectURL(blob);
+
+            navigator.serviceWorker.register(swUrl).catch(() => {
+                // Service worker registration fallback
+            });
+        }
+
+        // ==================== NOTIFICATION SYSTEM (PWA FIXED) ====================
+        function enableQuizNotifications() {
+            if (!("Notification" in window)) {
+                alert("თქვენს მოწყობილობას/ბრაუზერს არ აქვს შეტყობინებების მხარდაჭერა.");
+                return;
+            }
+
+            Notification.requestPermission().then(permission => {
+                if (permission === "granted") {
+                    sendQuizNotification();
+                } else if (permission === "denied") {
+                    alert("შეტყობინებები დაბლოკილია. ჩართეთ პარამეტრებიდან!");
+                }
+            });
+        }
+
+        function sendQuizNotification() {
+            if ("Notification" in window && Notification.permission === "granted") {
+                const title = "🧠 დროა ქვიზი გააკეთო!";
+                const options = {
+                    body: "ახალი ქვიზი გელოდება! შედი აპლიკაციაში და გამოსცადე შენი ცოდნა 🚀",
+                    icon: "https://cdn-icons-png.flaticon.com/512/3874/3874176.png",
+                    badge: "https://cdn-icons-png.flaticon.com/512/3874/3874176.png",
+                    vibrate: [100, 50, 100]
+                };
+
+                // Android PWA-სთვის (Service Worker-ის გავლით)
+                if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+                    navigator.serviceWorker.ready.then(registration => {
+                        registration.showNotification(title, options);
+                    }).catch(() => {
+                        new Notification(title, options);
+                    });
+                } else {
+                    // ჩვეულებრივი ბრაუზერებისთვის / iOS-ისთვის
+                    new Notification(title, options);
+                }
+            }
+        }
+
+        // აპლიკაციაში შესვლისთანავე (თუ Allowed-ია) - ეგრევე ჩამოიშლება Notification-ი!
+        window.addEventListener('DOMContentLoaded', () => {
+            sendQuizNotification();
+        });
+
+        // ==================== STATE MANAGEMENT ====================
+        let isRegisterMode = false;
+        let currentQuestionIndex = 0;
+        let activeQuestions = [];
+        let loggedInUser = "";
+        let isAnsweringLocked = false;
+        
+        // Timer Variables
+        let timerInterval = null;
+        let timeLeft = 10;
+        const QUESTION_TIME = 10;
+
+        // ==================== GENERATE 20 UNIQUE QUESTIONS ====================
+        function generateQuestions() {
+            const data = {};
+            
+            for (let grade = 1; grade <= 4; grade++) {
+                data[grade] = { math: [], geo: [] };
+                
+                // 1. მათემატიკა (20 უნიკალური კითხვა)
+                for (let i = 1; i <= 20; i++) {
+                    let num1, num2, correctMathAns, mathQ;
+
+                    if (grade === 1) {
+                        num1 = i * 2;
+                        num2 = i + 3;
+                        mathQ = `რას უდრის ${num1} + ${num2}?`;
+                        correctMathAns = num1 + num2;
+                    } else if (grade === 2) {
+                        num1 = i * 5 + 10;
+                        num2 = i * 2 + 1;
+                        mathQ = `რას უდრის ${num1} - ${num2}?`;
+                        correctMathAns = num1 - num2;
+                    } else if (grade === 3) {
+                        num1 = i + 1;
+                        num2 = 3;
+                        mathQ = `რას უდრის ${num1} × ${num2}?`;
+                        correctMathAns = num1 * num2;
+                    } else {
+                        num1 = i * 6;
+                        num2 = 2;
+                        mathQ = `რას უდრის ${num1} ÷ ${num2}?`;
+                        correctMathAns = num1 / num2;
+                    }
+
+                    let mathOpts = [
+                        correctMathAns,
+                        correctMathAns + 2,
+                        correctMathAns - 1 < 0 ? correctMathAns + 3 : correctMathAns - 1,
+                        correctMathAns + 4
+                    ];
+                    
+                    // არევა
+                    mathOpts.sort(() => Math.random() - 0.5);
+
+                    data[grade].math.push({
+                        q: mathQ,
+                        options: mathOpts.map(String),
+                        correctIndex: mathOpts.indexOf(correctMathAns)
+                    });
+                }
+
+                // 2. ქართული (20 უნიკალური კითხვა)
+                const geoQuestionsPool = {
+                    1: [
+                        { q: "რომელია ხმოვანი ასო?", opts: ["ა", "ბ", "გ", "დ"], corr: 0 },
+                        { q: "რამდენი ასოა ქართულ ანბანში?", opts: ["33", "30", "35", "32"], corr: 0 },
+                        { q: "რომელია თანხმოვანი ასო?", opts: ["მ", "ა", "ე", "ი"], corr: 0 },
+                        { q: "რით იწყება სიტყვა 'მზე'?", opts: ["მ", "ზ", "ე", "ს"], corr: 0 },
+                        { q: "რომელი ასოა ხმოვანი?", opts: ["ო", "რ", "ს", "ტ"], corr: 0 },
+                        { q: "რით ბოლოვდება სიტყვა 'ხე'?", opts: ["ე", "ხ", "ა", "ი"], corr: 0 },
+                        { q: "რამდენი ხმოვანია ქართულში?", opts: ["5", "6", "7", "33"], corr: 0 },
+                        { q: "იპოვე ხმოვანი:", opts: ["უ", "ფ", "ქ", "ღ"], corr: 0 },
+                        { q: "რომელი სიტყვა იწყება 'ა' ასოთი?", opts: ["ანბანი", "ბურთი", "გველი", "სახლი"], corr: 0 },
+                        { q: "რომელი სიტყვა იწყება 'ბ' ასოთი?", opts: ["ბალახი", "ალუბალი", "ვარდი", "ზარი"], corr: 0 },
+                        { q: "რომელია სწორი სიტყვა?", opts: ["წიგნი", "წიგმნ", "წიგნნ", "წგნი"], corr: 0 },
+                        { q: "რით იწყება 'წყალი'?", opts: ["წ", "ყ", "ა", "ლი"], corr: 0 },
+                        { q: "რომელი ასოა ხმოვანი?", opts: ["ი", "კ", "ლ", "მ"], corr: 0 },
+                        { q: "რომელი სიტყვაა მოკლე?", opts: ["ც", "მზისუმზირა", "კომპიუტერი", "ველოსიპედი"], corr: 0 },
+                        { q: "რით იწყება 'კატა'?", opts: ["კ", "ა", "ტ", "ს"], corr: 0 },
+                        { q: "რომელია ბოლო ასო 'ვაშლი'-ში?", opts: ["ი", "ლ", "შ", "ა"], corr: 0 },
+                        { q: "რომელია სწორი?", opts: ["დედა", "დდდა", "დედააა", "დდა"], corr: 0 },
+                        { q: "რით იწყება 'ძაღლი'?", opts: ["ძ", "ა", "ღ", "ლი"], corr: 0 },
+                        { q: "რომელია ხმოვანი?", opts: ["ე", "ნ", "ჟ", "რ"], corr: 0 },
+                        { q: "რომელი სიტყვა იწყება 'ს' ასოთი?", opts: ["სკოლა", "მასწავლებელი", "მოსწავლე", "კლასი"], corr: 0 }
+                    ],
+                    2: Array.from({ length: 20 }, (_, idx) => ({
+                        q: `იპოვე სიტყვის "წიგნი_${idx + 1}" მრავლობითი ფორმა:`,
+                        opts: [`წიგნები_${idx + 1}`, "წიგნი", "წიგნს", "წიგნით"],
+                        corr: 0
+                    })),
+                    3: Array.from({ length: 20 }, (_, idx) => ({
+                        q: `რომელია მოქმედების აღმნიშვნელი სიტყვა (ზმნა #${idx + 1})?`,
+                        opts: ["რბის", "სწრაფი", "მაგიდა", "ლამაზი"],
+                        corr: 0
+                    })),
+                    4: Array.from({ length: 20 }, (_, idx) => ({
+                        q: `რომელია სიტყვა "ნათელი_${idx + 1}"-ის სინონიმი?`,
+                        opts: ["მნათი", "ბნელი", "ცივი", "შავი"],
+                        corr: 0
+                    }))
+                };
+
+                geoQuestionsPool[grade].forEach(qObj => {
+                    let opts = [...qObj.opts];
+                    let correctWord = opts[qObj.corr];
+                    opts.sort(() => Math.random() - 0.5);
+
+                    data[grade].geo.push({
+                        q: qObj.q,
+                        options: opts,
+                        correctIndex: opts.indexOf(correctWord)
+                    });
+                });
+            }
+            return data;
+        }
+
+        const quizData = generateQuestions();
+
+        // ==================== LOGIC & UI FUNCTIONS ====================
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function toggleAuthMode() {
+            isRegisterMode = !isRegisterMode;
+            document.getElementById('auth-title').innerText = isRegisterMode ? 'რეგისტრაცია' : 'ავტორიზაცია';
+            document.getElementById('auth-toggle').innerText = isRegisterMode ? 'უკვე გაქვს ანგარიში? შედი' : 'არ გაქვს ანგარიში? დარეგისტრირდი';
+        }
+
+        function handleAuth() {
+            const user = document.getElementById('username').value.trim();
+            const pass = document.getElementById('password').value.trim();
+
+            if (!user || !pass) {
+                alert('გთხოვთ შეიყვანოთ სახელი და პაროლი!');
+                return;
+            }
+
+            loggedInUser = user;
+            document.getElementById('user-name-display').innerText = loggedInUser;
+            document.getElementById('user-bar').style.display = 'flex';
+
+            // შესვლისას ასევე ამოუგდებს შეტყობინებას
+            sendQuizNotification();
+
+            showScreen('selection-screen');
+        }
+
+        function handleLogout() {
+            clearInterval(timerInterval);
+            loggedInUser = "";
+            document.getElementById('username').value = "";
+            document.getElementById('password').value = "";
+            document.getElementById('user-bar').style.display = 'none';
+            showScreen('auth-screen');
+        }
+
+        function startQuiz() {
+            const grade = document.getElementById('grade-select').value;
+            const subject = document.getElementById('subject-select').value;
+
+            activeQuestions = quizData[grade][subject];
+            currentQuestionIndex = 0;
+
+            document.getElementById('subject-label').innerText = subject === 'math' ? 'მათემატიკა' : 'ქართული';
+            
+            showScreen('quiz-screen');
+            loadQuestion();
+        }
+
+        // ==================== QUESTION & TIMER LOGIC ====================
+        function loadQuestion() {
+            clearInterval(timerInterval);
+            isAnsweringLocked = false;
+            document.getElementById('timeout-message').style.display = 'none';
+
+            if (currentQuestionIndex >= activeQuestions.length) {
+                showScreen('final-screen');
+                return;
+            }
+
+            const qData = activeQuestions[currentQuestionIndex];
+            document.getElementById('question-count').innerText = `კითხვა ${currentQuestionIndex + 1} / ${activeQuestions.length}`;
+            document.getElementById('question-text').innerText = qData.q;
+
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+
+            qData.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswer(index, btn);
+                optionsContainer.appendChild(btn);
+            });
+
+            startTimer();
+        }
+
+        function startTimer() {
+            timeLeft = QUESTION_TIME;
+            updateTimerUI();
+
+            timerInterval = setInterval(() => {
+                timeLeft -= 0.1;
+                if (timeLeft <= 0) {
+                    timeLeft = 0;
+                    updateTimerUI();
+                    clearInterval(timerInterval);
+                    handleTimeout();
+                } else {
+                    updateTimerUI();
+                }
+            }, 100);
+        }
+
+        function updateTimerUI() {
+            const percentage = (timeLeft / QUESTION_TIME) * 100;
+            document.getElementById('timer-bar-fill').style.width = `${percentage}%`;
+            document.getElementById('timer-text').innerText = `დარჩენილი დრო: ${Math.ceil(timeLeft)} წამი`;
+        }
+
+        function handleTimeout() {
+            if (isAnsweringLocked) return;
+            isAnsweringLocked = true;
+
+            const qData = activeQuestions[currentQuestionIndex];
+            const allButtons = document.querySelectorAll('.option-btn');
+
+            // აჩვენებს სწორ პასუხს
+            allButtons[qData.correctIndex].classList.add('correct');
+            document.getElementById('timeout-message').style.display = 'block';
+
+            setTimeout(() => {
+                currentQuestionIndex++;
+                loadQuestion();
+            }, 1200);
+        }
+
+        function checkAnswer(selectedIndex, btnElement) {
+            if (isAnsweringLocked) return;
+            isAnsweringLocked = true;
+            clearInterval(timerInterval);
+
+            const qData = activeQuestions[currentQuestionIndex];
+            const allButtons = document.querySelectorAll('.option-btn');
+
+            if (selectedIndex === qData.correctIndex) {
+                btnElement.classList.add('correct');
+            } else {
+                btnElement.classList.add('wrong');
+                allButtons[qData.correctIndex].classList.add('correct');
+            }
+
+            setTimeout(() => {
+                currentQuestionIndex++;
+                loadQuestion();
+            }, 850);
+        }
+
+        function restart() {
+            showScreen('selection-screen');
+        }
+    </script>
+</body>
+</html>
