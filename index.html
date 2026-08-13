@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>სწავლა მხიარულად</title>
+
+    <!-- FIREBASE SDK (ონლაინ ბაზისთვის) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <style>
+        /* ==================== GLOBAL STYLES & BACKGROUND ==================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: #090a10;
+            overflow-x: hidden;
+            position: relative;
+            color: #fff;
+            padding: 20px 0;
+        }
+
+        .ambient-blob {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.55;
+            animation: float 14s infinite alternate ease-in-out;
+            z-index: 1;
+        }
+
+        .blob-1 {
+            width: 450px;
+            height: 450px;
+            background: linear-gradient(135deg, #a855f7, #ec4899);
+            top: -100px;
+            left: -100px;
+        }
+
+        .blob-2 {
+            width: 500px;
+            height: 500px;
+            background: linear-gradient(135deg, #06b6d4, #3b82f6);
+            bottom: -100px;
+            right: -100px;
+            animation-delay: -7s;
+        }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(60px, 50px) scale(1.2); }
+        }
+
+        /* ==================== LIQUID GLASS CARD ==================== */
+        .glass-card {
+            position: relative;
+            z-index: 10;
+            width: 90%;
+            max-width: 620px;
+            padding: 35px;
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(40px) saturate(200%);
+            -webkit-backdrop-filter: blur(40px) saturate(200%);
+            border-radius: 32px;
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            box-shadow: 0 30px 70px rgba(0, 0, 0, 0.6),
+                        inset 0 1px 2px rgba(255, 255, 255, 0.35);
+            text-align: center;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .user-bar {
+            display: none;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.95rem;
+            color: #e2e8f0;
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px 18px;
+            border-radius: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .user-bar span {
+            color: #c084fc;
+            font-weight: 700;
+        }
+
+        .logout-btn {
+            background: rgba(239, 68, 68, 0.25);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #fca5a5;
+            padding: 6px 14px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .logout-btn:hover {
+            background: rgba(239, 68, 68, 0.45);
+            color: #fff;
+            box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
+        }
+
+        h1 {
+            font-size: 2.3rem;
+            margin-bottom: 20px;
+            letter-spacing: -0.5px;
+            background: linear-gradient(180deg, #ffffff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        h2 {
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 16px 20px;
+            margin: 10px 0 18px 0;
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 16px;
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+            backdrop-filter: blur(10px);
+            transition: 0.3s;
+        }
+
+        select option {
+            background: #12131c;
+            color: #fff;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            background: rgba(255, 255, 255, 0.14);
+            border-color: #c084fc;
+            box-shadow: 0 0 20px rgba(192, 132, 252, 0.4);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #c084fc, #6366f1);
+            color: white;
+            font-size: 1.05rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(192, 132, 252, 0.3);
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(192, 132, 252, 0.5);
+        }
+
+        .btn-notify {
+            background: rgba(34, 197, 94, 0.2);
+            border: 1px solid rgba(34, 197, 94, 0.4);
+            color: #4ade80;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-notify:hover {
+            background: rgba(34, 197, 94, 0.35);
+            box-shadow: 0 0 20px rgba(34, 197, 94, 0.4);
+            color: #fff;
+        }
+
+        .btn-info-chat {
+            background: rgba(59, 130, 246, 0.25);
+            border: 1px solid rgba(59, 130, 246, 0.4);
+            color: #93c5fd;
+            margin-bottom: 15px;
+        }
+
+        .btn-info-chat:hover {
+            background: rgba(59, 130, 246, 0.4);
+            color: #fff;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .toggle-link {
+            margin-top: 15px;
+            display: inline-block;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 0.9rem;
+            text-decoration: underline;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+            animation: fadeIn 0.4s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.98); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* ==================== INFO CHAT STYLES ==================== */
+        .chat-container {
+            max-height: 280px;
+            overflow-y: auto;
+            text-align: left;
+            margin-bottom: 15px;
+            padding-right: 5px;
+        }
+
+        .chat-message {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            padding: 14px;
+            margin-bottom: 12px;
+        }
+
+        .chat-author {
+            font-size: 0.85rem;
+            color: #c084fc;
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
+
+        .chat-text {
+            font-size: 0.98rem;
+            color: #f1f5f9;
+            line-height: 1.4;
+            margin-bottom: 10px;
+            white-space: pre-wrap;
+        }
+
+        .reactions-bar {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .reaction-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 4px 10px;
+            font-size: 0.85rem;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .reaction-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: scale(1.08);
+        }
+
+        /* ==================== QUIZ & TIMER SCREEN ==================== */
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+            color: #94a3b8;
+        }
+
+        .timer-container {
+            margin-bottom: 20px;
+        }
+
+        .timer-bar-bg {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .timer-bar-fill {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #22c55e, #eab308, #ef4444);
+            border-radius: 10px;
+            transition: width 0.1s linear;
+        }
+
+        .timer-text {
+            font-size: 0.9rem;
+            margin-top: 6px;
+            color: #cbd5e1;
+            font-weight: 600;
+        }
+
+        .timeout-message {
+            display: none;
+            margin-top: 10px;
+            color: #ef4444;
+            font-weight: bold;
+            font-size: 1.1rem;
+            animation: pulse 0.5s infinite alternate;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin-top: 15px;
+        }
+
+        .option-btn {
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            color: #fff;
+            font-size: 1.05rem;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.25s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .option-btn:hover {
+            background: rgba(255, 255, 255, 0.18);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .option-btn.correct {
+            background: rgba(34, 197, 94, 0.4) !important;
+            border-color: #22c55e !important;
+            box-shadow: 0 0 20px rgba(34, 197, 94, 0.4);
+        }
+
+        .option-btn.wrong {
+            background: rgba(239, 68, 68, 0.4) !important;
+            border-color: #ef4444 !important;
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+        }
+
+        .animated-congrats {
+            font-size: 1.5rem;
+            line-height: 1.6;
+            margin: 25px 0;
+            background: linear-gradient(90deg, #f43f5e, #c084fc, #3b82f6, #f43f5e);
+            background-size: 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradientMove 4s infinite linear, pulse 2s infinite ease-in-out;
+            font-weight: bold;
+        }
+
+        @keyframes gradientMove {
+            0% { background-position: 0%; }
+            100% { background-position: 100%; }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        .global-author {
+            position: relative;
+            z-index: 10;
+            margin-top: 25px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: #c084fc;
+            text-shadow: 0 0 12px rgba(192, 132, 252, 0.6);
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ambient-blob blob-1"></div>
+    <div class="ambient-blob blob-2"></div>
+
+    <div class="glass-card">
+        <div id="user-bar" class="user-bar">
+            <div>გამარჯობა, <span id="user-name-display">მომხმარებელო</span>!</div>
+            <button class="logout-btn" onclick="handleLogout()">გამოსვლა</button>
+        </div>
+
+        <h1>სწავლა მხიარულად</h1>
+
+        <!-- 1. ავტორიზაცია -->
+        <div id="auth-screen" class="screen active">
+            <h2 id="auth-title">ავტორიზაცია</h2>
+            <input type="text" id="username" placeholder="შეიყვანე შენი სახელი">
+            <input type="password" id="password" placeholder="პაროლი">
+            
+            <button class="btn btn-notify" onclick="enableQuizNotifications()">🔔 შეტყობინებების ჩართვა</button>
+
+            <button class="btn" onclick="handleAuth()">შესვლა</button>
+            <span class="toggle-link" onclick="toggleAuthMode()" id="auth-toggle">არ გაქვს ანგარიში? დარეგისტრირდი</span>
+        </div>
+
+        <!-- 2. პარამეტრები -->
+        <div id="selection-screen" class="screen">
+            <h2>აირჩიე პარამეტრები</h2>
+            
+            <button class="btn btn-info-chat" onclick="openInfoChat()">📢 ინფორმაციის ჩატი</button>
+
+            <label style="display:block; text-align:left; margin-bottom:5px; color:#94a3b8;">კლასი:</label>
+            <select id="grade-select">
+                <option value="1">I კლასი</option>
+                <option value="2">II კლასი</option>
+                <option value="3">III კლასი</option>
+                <option value="4">IV კლასი</option>
+                <option value="5">V კლასი</option>
+                <option value="6">VI კლასი</option>
+                <option value="7">VII კლასი</option>
+            </select>
+
+            <label style="display:block; text-align:left; margin-bottom:5px; color:#94a3b8;">საგანი:</label>
+            <select id="subject-select">
+                <option value="math">მათემატიკა</option>
+                <option value="geo">ქართული</option>
+            </select>
+
+            <button class="btn" onclick="startQuiz()">ქვიზის დაწყება</button>
+        </div>
+
+        <!-- 📢 ჩატის ეკრანი -->
+        <div id="info-chat-screen" class="screen">
+            <h2>📢 ინფორმაციის ჩატი</h2>
+            
+            <div id="chat-messages" class="chat-container">
+                <p style="color: #94a3b8; text-align:center;">იტვირთება შეტყობინებები...</p>
+            </div>
+
+            <div id="admin-input-area" style="display: none;">
+                <textarea id="admin-msg-input" rows="3" placeholder="დაწერე ახალი სიახლე..."></textarea>
+                <button class="btn" onclick="postAdminMessage()" style="margin-bottom: 12px;">გამოქვეყნება</button>
+            </div>
+
+            <button class="btn btn-notify" onclick="showScreen('selection-screen')">უკან დაბრუნება</button>
+        </div>
+
+        <!-- 3. ქვიზის ეკრანი -->
+        <div id="quiz-screen" class="screen">
+            <div class="quiz-header">
+                <span id="question-count">კითხვა 1 / 20</span>
+                <span id="subject-label"></span>
+            </div>
+
+            <div class="timer-container">
+                <div class="timer-bar-bg">
+                    <div id="timer-bar-fill" class="timer-bar-fill"></div>
+                </div>
+                <div id="timer-text" class="timer-text">დარჩენილი დრო: 10 წამი</div>
+                <div id="timeout-message" class="timeout-message">დრო ამოიწურა! გოლი მიდი ამ კითხვაზე!</div>
+            </div>
+
+            <h2 id="question-text">კითხვის ტექსტი...</h2>
+            <div class="options-grid" id="options-container"></div>
+        </div>
+
+        <!-- 4. ფინალური ეკრანი -->
+        <div id="final-screen" class="screen">
+            <div class="animated-congrats">
+                ყოჩაღ! შენ დღევანდელი ქვიზი გაიარე, დაელოდე ხვალინდელ ქვიზს!
+            </div>
+            <button class="btn" onclick="restart()">თავიდან დაწყება</button>
+        </div>
+    </div>
+
+    <div class="global-author">
+        made by: ALEKSANDRE ABESADZE
+    </div>
+
+    <script>
+        // ==================== FIREBASE REALTIME DATABASE CONFIG ====================
+        // საჯარო Realtime Cloud Database შეტყობინებების სინქრონიზაციისთვის
+        const firebaseConfig = {
+            databaseURL: "https://quiz-app-chat-default-rtdb.europe-west1.firebasedatabase.app"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const chatRef = database.ref('global_info_chat');
+
+        // ==================== PWA ANDROID FIX ====================
+        if ('serviceWorker' in navigator) {
+            const swCode = `
+                self.addEventListener('install', e => self.skipWaiting());
+                self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
+            `;
+            const blob = new Blob([swCode], { type: 'application/javascript' });
+            const swUrl = URL.createObjectURL(blob);
+            navigator.serviceWorker.register(swUrl).catch(() => {});
+        }
+
+        function enableQuizNotifications() {
+            if (!("Notification" in window)) {
+                alert("თქვენს მოწყობილობას არ აქვს შეტყობინებების მხარდაჭერა.");
+                return;
+            }
+            Notification.requestPermission().then(permission => {
+                if (permission === "granted") sendQuizNotification();
+            });
+        }
+
+        function sendQuizNotification() {
+            if ("Notification" in window && Notification.permission === "granted") {
+                const title = "🧠 დროა ქვიზი გააკეთო!";
+                const options = {
+                    body: "ახალი ქვიზი გელოდება! შედი აპლიკაციაში 🚀",
+                    icon: "https://cdn-icons-png.flaticon.com/512/3874/3874176.png"
+                };
+                new Notification(title, options);
+            }
+        }
+
+        // ==================== STATE MANAGEMENT ====================
+        let isRegisterMode = false;
+        let currentQuestionIndex = 0;
+        let activeQuestions = [];
+        let loggedInUser = "";
+        let isAnsweringLocked = false;
+        let timerInterval = null;
+        let timeLeft = 10;
+        const QUESTION_TIME = 10;
+        let chatPosts = {};
+
+        // ==================== REALTIME ONLINE CHAT ====================
+        // ისმენს ცვლილებებს ბაზიდან რეალურ დროში
+        chatRef.on('value', (snapshot) => {
+            chatPosts = snapshot.val() || {};
+            renderChatMessages();
+        });
+
+        function openInfoChat() {
+            const adminArea = document.getElementById('admin-input-area');
+            if (loggedInUser === "ალექსანდრე") {
+                adminArea.style.display = "block";
+            } else {
+                adminArea.style.display = "none";
+            }
+            renderChatMessages();
+            showScreen('info-chat-screen');
+        }
+
+        function renderChatMessages() {
+            const container = document.getElementById('chat-messages');
+            container.innerHTML = "";
+
+            const keys = Object.keys(chatPosts);
+            if (keys.length === 0) {
+                container.innerHTML = '<p style="color: #94a3b8; text-align:center;">ჯერ შეტყობინება არ არის.</p>';
+                return;
+            }
+
+            keys.forEach(key => {
+                const post = chatPosts[key];
+                const msgDiv = document.createElement('div');
+                msgDiv.className = 'chat-message';
+
+                let reactionsHTML = '<div class="reactions-bar">';
+                const reactions = post.reactions || { "👍": 0, "❤️": 0, "🔥": 0, "🎉": 0 };
+                
+                for (const [emoji, count] of Object.entries(reactions)) {
+                    reactionsHTML += `<button class="reaction-btn" onclick="addReaction('${key}', '${emoji}')">${emoji} ${count}</button>`;
+                }
+                reactionsHTML += '</div>';
+
+                msgDiv.innerHTML = `
+                    <div class="chat-author">${post.author}</div>
+                    <div class="chat-text">${post.text}</div>
+                    ${reactionsHTML}
+                `;
+                container.appendChild(msgDiv);
+            });
+
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function postAdminMessage() {
+            const input = document.getElementById('admin-msg-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            const newPostRef = chatRef.push();
+            newPostRef.set({
+                author: "ალექსანდრე (ადმინი)",
+                text: text,
+                reactions: { "👍": 0, "❤️": 0, "🔥": 0, "🎉": 0 }
+            });
+
+            input.value = "";
+        }
+
+        function addReaction(postId, emoji) {
+            const countRef = database.ref(`global_info_chat/${postId}/reactions/${emoji}`);
+            countRef.transaction(currentCount => (currentCount || 0) + 1);
+        }
+
+        // ==================== GENERATE QUESTIONS ====================
+        function generateQuestions() {
+            const data = {};
+            for (let grade = 1; grade <= 7; grade++) {
+                data[grade] = { math: [], geo: [] };
+                for (let i = 1; i <= 20; i++) {
+                    let num1 = i * 2, num2 = i + 3, correctMathAns = num1 + num2;
+                    let mathQ = `რას უდრის ${num1} + ${num2}?`;
+
+                    if (grade === 2) { mathQ = `რას უდრის ${num1 + 10} - ${num2}?`; correctMathAns = (num1 + 10) - num2; }
+                    else if (grade >= 3) { mathQ = `რას უდრის ${i + 1} × 3?`; correctMathAns = (i + 1) * 3; }
+
+                    let mathOpts = [correctMathAns, correctMathAns + 2, correctMathAns + 1, correctMathAns + 4].sort(() => Math.random() - 0.5);
+
+                    data[grade].math.push({
+                        q: mathQ,
+                        options: mathOpts.map(String),
+                        correctIndex: mathOpts.indexOf(correctMathAns)
+                    });
+
+                    data[grade].geo.push({
+                        q: `კითხვა #${i} (${grade} კლასი): იპოვე სწორი სიტყვა`,
+                        options: ["სწორი", "არასწორი", "შეცდომა", "ტექსტი"].sort(() => Math.random() - 0.5),
+                        correctIndex: 0
+                    });
+                }
+            }
+            return data;
+        }
+
+        const quizData = generateQuestions();
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function toggleAuthMode() {
+            isRegisterMode = !isRegisterMode;
+            document.getElementById('auth-title').innerText = isRegisterMode ? 'რეგისტრაცია' : 'ავტორიზაცია';
+            document.getElementById('auth-toggle').innerText = isRegisterMode ? 'უკვე გაქვს ანგარიში? შედი' : 'არ გაქვს ანგარიში? დარეგისტრირდი';
+        }
+
+        function handleAuth() {
+            const user = document.getElementById('username').value.trim();
+            const pass = document.getElementById('password').value.trim();
+
+            if (!user || !pass) {
+                alert('გთხოვთ შეიყვანოთ სახელი და პაროლი!');
+                return;
+            }
+
+            if (user === "ალექსანდრე" && pass !== "87654321") {
+                alert("არასწორი პაროლი ალექსანდრეს ანგარიშისთვის!");
+                return;
+            }
+
+            loggedInUser = user;
+            document.getElementById('user-name-display').innerText = loggedInUser;
+            document.getElementById('user-bar').style.display = 'flex';
+
+            sendQuizNotification();
+            showScreen('selection-screen');
+        }
+
+        function handleLogout() {
+            clearInterval(timerInterval);
+            loggedInUser = "";
+            document.getElementById('username').value = "";
+            document.getElementById('password').value = "";
+            document.getElementById('user-bar').style.display = 'none';
+            showScreen('auth-screen');
+        }
+
+        function startQuiz() {
+            const grade = document.getElementById('grade-select').value;
+            const subject = document.getElementById('subject-select').value;
+
+            activeQuestions = quizData[grade][subject];
+            currentQuestionIndex = 0;
+            document.getElementById('subject-label').innerText = subject === 'math' ? 'მათემატიკა' : 'ქართული';
+            
+            showScreen('quiz-screen');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            clearInterval(timerInterval);
+            isAnsweringLocked = false;
+            document.getElementById('timeout-message').style.display = 'none';
+
+            if (currentQuestionIndex >= activeQuestions.length) {
+                showScreen('final-screen');
+                return;
+            }
+
+            const qData = activeQuestions[currentQuestionIndex];
+            document.getElementById('question-count').innerText = `კითხვა ${currentQuestionIndex + 1} / ${activeQuestions.length}`;
+            document.getElementById('question-text').innerText = qData.q;
+
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+
+            qData.options.forEach((opt, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = opt;
+                btn.onclick = () => checkAnswer(index, btn);
+                optionsContainer.appendChild(btn);
+            });
+
+            startTimer();
+        }
+
+        function startTimer() {
+            timeLeft = QUESTION_TIME;
+            updateTimerUI();
+
+            timerInterval = setInterval(() => {
+                timeLeft -= 0.1;
+                if (timeLeft <= 0) {
+                    timeLeft = 0;
+                    updateTimerUI();
+                    clearInterval(timerInterval);
+                    handleTimeout();
+                } else {
+                    updateTimerUI();
+                }
+            }, 100);
+        }
+
+        function updateTimerUI() {
+            const percentage = (timeLeft / QUESTION_TIME) * 100;
+            document.getElementById('timer-bar-fill').style.width = `${percentage}%`;
+            document.getElementById('timer-text').innerText = `დარჩენილი დრო: ${Math.ceil(timeLeft)} წამი`;
+        }
+
+        function handleTimeout() {
+            if (isAnsweringLocked) return;
+            isAnsweringLocked = true;
+
+            const qData = activeQuestions[currentQuestionIndex];
+            const allButtons = document.querySelectorAll('.option-btn');
+
+            if(allButtons[qData.correctIndex]) allButtons[qData.correctIndex].classList.add('correct');
+            document.getElementById('timeout-message').style.display = 'block';
+
+            setTimeout(() => {
+                currentQuestionIndex++;
+                loadQuestion();
+            }, 1200);
+        }
+
+        function checkAnswer(selectedIndex, btnElement) {
+            if (isAnsweringLocked) return;
+            isAnsweringLocked = true;
+            clearInterval(timerInterval);
+
+            const qData = activeQuestions[currentQuestionIndex];
+            const allButtons = document.querySelectorAll('.option-btn');
+
+            if (selectedIndex === qData.correctIndex) {
+                btnElement.classList.add('correct');
+            } else {
+                btnElement.classList.add('wrong');
+                if(allButtons[qData.correctIndex]) allButtons[qData.correctIndex].classList.add('correct');
+            }
+
+            setTimeout(() => {
+                currentQuestionIndex++;
+                loadQuestion();
+            }, 850);
+        }
+
+        function restart() {
+            showScreen('selection-screen');
+        }
+    </script>
+</body>
+</html>
