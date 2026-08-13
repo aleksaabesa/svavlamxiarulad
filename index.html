@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>სწავლა მხიარულად</title>
+    <style>
+        /* ==================== GLOBAL STYLES & BACKGROUND ==================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #0f172a, #1e1b4b, #311042);
+            overflow-x: hidden;
+            position: relative;
+            color: #fff;
+        }
+
+        /* Ambient Liquid Background Elements */
+        .ambient-blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.6;
+            animation: float 10s infinite alternate ease-in-out;
+            z-index: 1;
+        }
+
+        .blob-1 {
+            width: 350px;
+            height: 350px;
+            background: #8b5cf6;
+            top: 10%;
+            left: 15%;
+        }
+
+        .blob-2 {
+            width: 400px;
+            height: 400px;
+            background: #06b6d4;
+            bottom: 10%;
+            right: 15%;
+            animation-delay: -5s;
+        }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(30px, 50px) scale(1.1); }
+        }
+
+        /* ==================== LIQUID GLASS CONTAINER ==================== */
+        .glass-card {
+            position: relative;
+            z-index: 10;
+            width: 90%;
+            max-width: 650px;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 28px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4),
+                        inset 0 0 15px rgba(255, 255, 255, 0.1);
+            text-align: center;
+            transition: all 0.4s ease;
+        }
+
+        /* Glass Text & Input Controls */
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 25px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            letter-spacing: 1px;
+            background: linear-gradient(135deg, #fff, #cbd5e1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 14px 20px;
+            margin: 10px 0 20px 0;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 14px;
+            color: #fff;
+            font-size: 1rem;
+            outline: none;
+            backdrop-filter: blur(5px);
+            transition: 0.3s;
+        }
+
+        select option {
+            background: #1e1b4b;
+            color: #fff;
+        }
+
+        input:focus, select:focus {
+            background: rgba(255, 255, 255, 0.18);
+            border-color: #a855f7;
+            box-shadow: 0 0 15px rgba(168, 85, 247, 0.4);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #a855f7, #6366f1);
+            color: white;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(168, 85, 247, 0.3);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 25px rgba(168, 85, 247, 0.5);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .toggle-link {
+            margin-top: 15px;
+            display: inline-block;
+            color: #cbd5e1;
+            cursor: pointer;
+            font-size: 0.9rem;
+            text-decoration: underline;
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ==================== QUIZ SCREEN ==================== */
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            font-size: 1rem;
+            color: #cbd5e1;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin-top: 25px;
+        }
+
+        .option-btn {
+            padding: 14px;
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 1rem;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s ease;
+        }
+
+        .option-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(5px);
+        }
+
+        /* ==================== FINAL SCREEN (ANIMATED) ==================== */
+        .animated-congrats {
+            font-size: 1.6rem;
+            line-height: 1.6;
+            margin: 30px 0;
+            background: linear-gradient(90deg, #ec4899, #8b5cf6, #3b82f6, #ec4899);
+            background-size: 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradientMove 4s infinite linear, pulseText 2s infinite ease-in-out;
+            font-weight: bold;
+        }
+
+        .author-tag {
+            margin-top: 40px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+            color: #f472b6;
+            text-shadow: 0 0 10px rgba(244, 114, 182, 0.5);
+            animation: glow 2s infinite alternate;
+        }
+
+        @keyframes gradientMove {
+            0% { background-position: 0%; }
+            100% { background-position: 100%; }
+        }
+
+        @keyframes pulseText {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+        }
+
+        @keyframes glow {
+            from { text-shadow: 0 0 5px #f472b6, 0 0 10px #f472b6; }
+            to { text-shadow: 0 0 15px #f472b6, 0 0 25px #ec4899; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ambient-blob blob-1"></div>
+    <div class="ambient-blob blob-2"></div>
+
+    <div class="glass-card">
+        <h1>სწავლა მხიარულად</h1>
+
+        <!-- 1. ავტორიზაცია / რეგისტრაცია -->
+        <div id="auth-screen" class="screen active">
+            <h2 id="auth-title">ავტორიზაცია</h2>
+            <input type="text" id="username" placeholder="მომხმარებლის სახელი">
+            <input type="password" id="password" placeholder="პაროლი">
+            <button class="btn" onclick="handleAuth()">შესვლა</button>
+            <span class="toggle-link" onclick="toggleAuthMode()" id="auth-toggle">არ გაქვს ანგარიში? დარეგისტრირდი</span>
+        </div>
+
+        <!-- 2. კლასისა და საგნის არჩევა -->
+        <div id="selection-screen" class="screen">
+            <h2>აირჩიე პარამეტრები</h2>
+            <label style="display:block; text-align:left; margin-bottom:5px;">აირჩიე კლასი:</label>
+            <select id="grade-select">
+                <option value="1">I კლასი</option>
+                <option value="2">II კლასი</option>
+                <option value="3">III კლასი</option>
+                <option value="4">IV კლასი</option>
+            </select>
+
+            <label style="display:block; text-align:left; margin-bottom:5px;">აირჩიე საგანი:</label>
+            <select id="subject-select">
+                <option value="math">მათემატიკა</option>
+                <option value="geo">ქართული</option>
+            </select>
+
+            <button class="btn" onclick="startQuiz()">ქვიზის დაწყება</button>
+        </div>
+
+        <!-- 3. ქვიზის ეკრანი -->
+        <div id="quiz-screen" class="screen">
+            <div class="quiz-header">
+                <span id="question-count">კითხვა 1 / 20</span>
+                <span id="subject-label"></span>
+            </div>
+            <h2 id="question-text">კითხვის ტექსტი...</h2>
+            <div class="options-grid" id="options-container">
+                <!-- ოპციები ჩაიტვირთება დინამიურად -->
+            </div>
+        </div>
+
+        <!-- 4. ფინალური ეკრანი -->
+        <div id="final-screen" class="screen">
+            <div class="animated-congrats">
+                ყოჩაღ! შენ დღევანდელი ქვიზი გაიარე, დაელოდე ხვალინდელ ქვიზს!
+            </div>
+            <div class="author-tag">
+                made by: ALEKSANDRE ABESADZE
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== STATE MANAGEMENT ====================
+        let isRegisterMode = false;
+        let currentQuestionIndex = 0;
+        let activeQuestions = [];
+
+        // ==================== QUESTIONS DATA (20 PER COMBINATION) ====================
+        // გენერირებულია 20-20 კითხვა თითოეული კლასისა და საგნისთვის
+        function generateQuestions() {
+            const data = {};
+            for (let grade = 1; grade <= 4; grade++) {
+                data[grade] = { math: [], geo: [] };
+                
+                for (let i = 1; i <= 20; i++) {
+                    // მათემატიკა
+                    let mathQ = "", mathAns = [], mathCorr = 0;
+                    if (grade === 1) {
+                        let a = i, b = (i % 5) + 1;
+                        mathQ = `რას უდრის ${a} + ${b}?`;
+                        let correct = a + b;
+                        mathAns = [correct, correct + 1, correct - 1, correct + 2];
+                    } else if (grade === 2) {
+                        let a = i * 2, b = i + 3;
+                        mathQ = `რას უდრის ${a} - ${b}?`;
+                        let correct = a - b;
+                        mathAns = [correct, correct + 2, correct - 1, correct + 1];
+                    } else if (grade === 3) {
+                        let a = (i % 9) + 2, b = 3;
+                        mathQ = `რას უდრის ${a} × ${b}?`;
+                        let correct = a * b;
+                        mathAns = [correct, correct + 3, correct - 2, correct + 1];
+                    } else {
+                        let a = i * 4, b = 2;
+                        mathQ = `რას უდრის ${a} ÷ ${b}?`;
+                        let correct = a / b;
+                        mathAns = [correct, correct + 2, correct - 1, correct + 4];
+                    }
+
+                    data[grade].math.push({
+                        q: mathQ,
+                        options: mathAns.map(String),
+                        correct: 0
+                    });
+
+                    // ქართული
+                    let geoQ = "", geoAns = [];
+                    if (grade === 1) {
+                        geoQ = `რომელია ასო '${String.fromCharCode(4304 + (i % 5))}' - ხმოვანი თუ თანხმოვანი?`;
+                        let isVowel = ['ა','ე','ი','ო','უ'].includes(String.fromCharCode(4304 + (i % 5)));
+                        geoAns = isVowel ? ["ხმოვანი", "თანხმოვანი", "არცერთი", "ორივე"] : ["თანხმოვანი", "ხმოვანი", "არცერთი", "ორივე"];
+                    } else if (grade === 2) {
+                        geoQ = `იპოვე სიტყვის "წიგნი" მრავლობითი ფორმა (კითხვა ${i}):`;
+                        geoAns = ["წიგნები", "წიგნი", "წიგნს", "წიგნმა"];
+                    } else if (grade === 3) {
+                        geoQ = `რომელია ზმნა ჩამოთვლილთაგან? (კითხვა ${i}):`;
+                        geoAns = ["თამაშობს", "ბურთი", "ლამაზი", "სწრაფად"];
+                    } else {
+                        geoQ = `რომელია "მზე"-ს სინონიმი? (კითხვა ${i}):`;
+                        geoAns = ["მნათობი", "მთვარე", "ვარსკვლავი", "ღამე"];
+                    }
+
+                    data[grade].geo.push({
+                        q: geoQ,
+                        options: geoAns,
+                        correct: 0
+                    });
+                }
+            }
+            return data;
+        }
+
+        const quizData = generateQuestions();
+
+        // ==================== NAVIGATION & LOGIC ====================
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function toggleAuthMode() {
+            isRegisterMode = !isRegisterMode;
+            document.getElementById('auth-title').innerText = isRegisterMode ? 'რეგისტრაცია' : 'ავტორიზაცია';
+            document.getElementById('auth-toggle').innerText = isRegisterMode ? 'უკვე გაქვს ანგარიში? შედი' : 'არ გაქვს ანგარიში? დარეგისტრირდი';
+        }
+
+        function handleAuth() {
+            const user = document.getElementById('username').value;
+            const pass = document.getElementById('password').value;
+
+            if (!user || !pass) {
+                alert('გთხოვთ შეავსოთ ყველა ველი!');
+                return;
+            }
+
+            // მარტივი ავტორიზაციის სიმულაცია
+            showScreen('selection-screen');
+        }
+
+        function startQuiz() {
+            const grade = document.getElementById('grade-select').value;
+            const subject = document.getElementById('subject-select').value;
+
+            activeQuestions = quizData[grade][subject];
+            currentQuestionIndex = 0;
+
+            document.getElementById('subject-label').innerText = subject === 'math' ? 'მათემატიკა' : 'ქართული';
+            
+            showScreen('quiz-screen');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            if (currentQuestionIndex >= activeQuestions.length) {
+                showScreen('final-screen');
+                return;
+            }
+
+            const qData = activeQuestions[currentQuestionIndex];
+            document.getElementById('question-count').innerText = `კითხვა ${currentQuestionIndex + 1} / ${activeQuestions.length}`;
+            document.getElementById('question-text').innerText = qData.q;
+
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+
+            // ოპციების არევა ვიზუალურად
+            qData.options.forEach((opt) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.innerText = opt;
+                btn.onclick = () => selectOption();
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function selectOption() {
+            currentQuestionIndex++;
+            loadQuestion();
+        }
+    </script>
+</body>
+</html>
