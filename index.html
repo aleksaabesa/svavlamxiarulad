@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="ka">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>სწავლა მხიარულად - სრული ვერსია</title>
+
+    <style>
+        /* ==================== GLOBAL STYLES & BACKGROUND ==================== */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, sans-serif; }
+        body {
+            min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            background: #090a10; overflow-x: hidden; position: relative; color: #fff; padding: 20px 0;
+        }
+        .ambient-blob { position: fixed; border-radius: 50%; filter: blur(100px); opacity: 0.55; animation: float 14s infinite alternate ease-in-out; z-index: 1; }
+        .blob-1 { width: 450px; height: 450px; background: linear-gradient(135deg, #a855f7, #ec4899); top: -100px; left: -100px; }
+        .blob-2 { width: 500px; height: 500px; background: linear-gradient(135deg, #06b6d4, #3b82f6); bottom: -100px; right: -100px; animation-delay: -7s; }
+        @keyframes float { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(60px, 50px) scale(1.2); } }
+
+        /* ==================== GLASS CARD ==================== */
+        .glass-card {
+            position: relative; z-index: 10; width: 90%; max-width: 650px; padding: 30px;
+            background: rgba(255, 255, 255, 0.06); backdrop-filter: blur(40px) saturate(200%);
+            border-radius: 32px; border: 1px solid rgba(255, 255, 255, 0.22);
+            box-shadow: 0 30px 70px rgba(0, 0, 0, 0.6); text-align: center;
+        }
+
+        /* ==================== HEADER & USER BAR ==================== */
+        .user-bar {
+            display: none; justify-content: space-between; align-items: center; font-size: 0.95rem;
+            background: rgba(255, 255, 255, 0.05); padding: 10px 18px; border-radius: 18px; margin-bottom: 20px;
+        }
+        .user-info { display: flex; align-items: center; gap: 10px; }
+        .user-avatar { font-size: 1.5rem; }
+        .stats-badge { background: rgba(192, 132, 252, 0.2); padding: 4px 8px; border-radius: 8px; font-weight: bold; color: #c084fc; font-size: 0.85rem;}
+        
+        h1 { font-size: 2.2rem; margin-bottom: 20px; background: linear-gradient(180deg, #ffffff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        h2 { font-size: 1.4rem; margin-bottom: 15px; font-weight: 500; }
+
+        /* ==================== FORMS & BUTTONS ==================== */
+        input, select, textarea {
+            width: 100%; padding: 14px; margin: 8px 0 15px; background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.18); border-radius: 14px; color: #fff; font-size: 1rem; outline: none;
+        }
+        select option { background: #12131c; color: #fff; }
+        .btn {
+            width: 100%; padding: 15px; border: none; border-radius: 14px; background: linear-gradient(135deg, #c084fc, #6366f1);
+            color: white; font-size: 1.05rem; font-weight: 600; cursor: pointer; transition: 0.2s; margin-bottom: 10px;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(192, 132, 252, 0.4); }
+        .btn-red { background: linear-gradient(135deg, #ef4444, #b91c1c); }
+        .btn-green { background: linear-gradient(135deg, #22c55e, #16a34a); }
+        .btn-small { padding: 8px 12px; font-size: 0.85rem; width: auto; border-radius: 10px; }
+        .flex-buttons { display: flex; gap: 10px; }
+
+        /* ==================== AVATAR SELECTION ==================== */
+        .avatar-grid { display: flex; justify-content: center; gap: 15px; margin-bottom: 15px; display: none; }
+        .avatar-opt { font-size: 2rem; cursor: pointer; opacity: 0.5; transition: 0.2s; }
+        .avatar-opt.selected { opacity: 1; transform: scale(1.2); }
+
+        /* ==================== SCREENS ==================== */
+        .screen { display: none; }
+        .screen.active { display: block; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
+
+        /* ==================== QUIZ ==================== */
+        .timer-bar-bg { width: 100%; height: 8px; background: rgba(255, 255, 255, 0.1); border-radius: 10px; margin-bottom: 5px; }
+        .timer-bar-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #22c55e, #ef4444); border-radius: 10px; transition: width 0.1s linear; }
+        .options-grid { display: grid; gap: 10px; margin-top: 15px; }
+        .option-btn { padding: 15px; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 12px; color: #fff; cursor: pointer; text-align: left; }
+        .option-btn.correct { background: #22c55e !important; border-color: #22c55e; }
+        .option-btn.wrong { background: #ef4444 !important; border-color: #ef4444; }
+        .option-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* ==================== ADMIN & LEADERBOARD ==================== */
+        .list-item { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 10px; margin-bottom: 8px; }
+        .admin-panel-wrap { text-align: left; max-height: 400px; overflow-y: auto; padding-right: 10px; }
+        .hint-btn { background: #eab308; color: #000; font-weight: bold; padding: 8px 15px; border-radius: 15px; cursor: pointer; border: none; margin-bottom: 10px; }
+        .hint-btn:disabled { background: #555; color: #aaa; }
+    </style>
+</head>
+<body>
+
+    <div class="ambient-blob blob-1"></div>
+    <div class="ambient-blob blob-2"></div>
+
+    <div class="glass-card">
+        <div id="user-bar" class="user-bar">
+            <div class="user-info">
+                <span id="user-avatar" class="user-avatar">👤</span>
+                <div>
+                    <div id="user-name-display" style="font-weight: bold;">მომხმარებელი</div>
+                    <span class="stats-badge">⭐ <span id="user-points">0</span></span>
+                    <span class="stats-badge">🔥 <span id="user-streak">0</span> დღე</span>
+                </div>
+            </div>
+            <button class="btn btn-red btn-small" onclick="handleLogout()">გამოსვლა</button>
+        </div>
+
+        <h1>სწავლა მხიარულად</h1>
+
+        <!-- 1. AUTH SCREEN -->
+        <div id="auth-screen" class="screen active">
+            <h2 id="auth-title">ავტორიზაცია</h2>
+            
+            <div id="avatar-selection" class="avatar-grid">
+                <span class="avatar-opt selected" onclick="selectAvatar('🦊', this)">🦊</span>
+                <span class="avatar-opt" onclick="selectAvatar('🚀', this)">🚀</span>
+                <span class="avatar-opt" onclick="selectAvatar('👑', this)">👑</span>
+                <span class="avatar-opt" onclick="selectAvatar('🦁', this)">🦁</span>
+                <span class="avatar-opt" onclick="selectAvatar('🦄', this)">🦄</span>
+            </div>
+
+            <input type="text" id="username" placeholder="სახელი (მაგ: ნიკა)">
+            <input type="password" id="password" placeholder="პაროლი">
+            
+            <button class="btn" onclick="handleAuth()">შესვლა</button>
+            <p style="color:#94a3b8; cursor:pointer; text-decoration:underline; font-size:0.9rem;" onclick="toggleAuthMode()" id="auth-toggle">არ გაქვს ანგარიში? დარეგისტრირდი</p>
+        </div>
+
+        <!-- 2. MAIN MENU -->
+        <div id="selection-screen" class="screen">
+            <div id="global-msg-box" style="background: rgba(59, 130, 246, 0.2); padding: 15px; border-radius: 15px; margin-bottom: 15px; border: 1px solid #3b82f6;">
+                მოგესალმებით! ეს არის BETA ვერსია. ⭐️
+            </div>
+            
+            <div class="flex-buttons">
+                <button class="btn btn-green" onclick="showScreen('leaderboard-screen'); renderLeaderboard();">🏆 ტოპ 10</button>
+                <button class="btn btn-red" id="admin-btn" style="display:none;" onclick="openAdmin()">🛠 ადმინი</button>
+            </div>
+
+            <label style="display:block; text-align:left; color:#94a3b8;">კლასი:</label>
+            <select id="grade-select">
+                <option value="1">I კლასი</option>
+                <option value="2">II კლასი</option>
+                <option value="3">III კლასი</option>
+                <option value="4">IV კლასი</option>
+                <option value="5">V კლასი</option>
+            </select>
+
+            <label style="display:block; text-align:left; color:#94a3b8;">საგანი:</label>
+            <select id="subject-select">
+                <option value="math">მათემატიკა</option>
+                <option value="geo">ქართული</option>
+            </select>
+
+            <button class="btn" onclick="startQuiz()">▶ ქვიზის დაწყება</button>
+        </div>
+
+        <!-- 3. QUIZ SCREEN -->
+        <div id="quiz-screen" class="screen">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <span id="question-count" style="color:#94a3b8;">კითხვა 1/10</span>
+                <button id="hint-btn" class="hint-btn" onclick="useHint()">💡 50/50 (1 დარჩა)</button>
+            </div>
+
+            <div class="timer-bar-bg"><div id="timer-bar-fill" class="timer-bar-fill"></div></div>
+            <div id="timer-text" style="font-size: 0.85rem; color: #cbd5e1; margin-bottom: 15px;">დრო: 10წმ</div>
+            
+            <h2 id="question-text">კითხვა...</h2>
+            <div class="options-grid" id="options-container"></div>
+        </div>
+
+        <!-- 4. FINAL SCREEN -->
+        <div id="final-screen" class="screen">
+            <h2>🎉 ქვიზი დასრულდა!</h2>
+            <p style="font-size: 1.2rem; margin: 20px 0;">შენ დააგროვე: <b style="color:#22c55e;" id="final-score">0</b> ქულა</p>
+            <button class="btn" onclick="showScreen('selection-screen')">მთავარ მენიუში დაბრუნება</button>
+        </div>
+
+        <!-- 5. LEADERBOARD -->
+        <div id="leaderboard-screen" class="screen">
+            <h2>🏆 ლიდერბორდი (ტოპ 10)</h2>
+            <div id="leaderboard-list" class="admin-panel-wrap"></div>
+            <button class="btn" style="margin-top:15px;" onclick="showScreen('selection-screen')">უკან დაბრუნება</button>
+        </div>
+
+        <!-- 6. ADMIN PANEL -->
+        <div id="admin-screen" class="screen">
+            <h2>🛠 ადმინ პანელი</h2>
+            <div class="admin-panel-wrap">
+                <h3 style="margin-top:10px; color:#c084fc;">⚙️ პარამეტრები</h3>
+                <label>ტაიმერის დრო (წამები):</label>
+                <input type="number" id="admin-timer" value="10">
+                <label>გლობალური მესიჯი:</label>
+                <textarea id="admin-msg" rows="2"></textarea>
+                <button class="btn btn-green btn-small" onclick="saveAdminSettings()">შენახვა</button>
+
+                <h3 style="margin-top:20px; color:#c084fc;">➕ კითხვის დამატება</h3>
+                <select id="add-q-grade"><option value="1">I კლასი</option><option value="2">II კლასი</option></select>
+                <select id="add-q-subject"><option value="math">მათემატიკა</option><option value="geo">ქართული</option></select>
+                <input type="text" id="add-q-text" placeholder="კითხვის ტექსტი">
+                <input type="text" id="add-q-opt1" placeholder="სწორი პასუხი!">
+                <input type="text" id="add-q-opt2" placeholder="არასწორი 1">
+                <input type="text" id="add-q-opt3" placeholder="არასწორი 2">
+                <input type="text" id="add-q-opt4" placeholder="არასწორი 3">
+                <button class="btn btn-small" onclick="addCustomQuestion()">კითხვის დამატება</button>
+
+                <h3 style="margin-top:20px; color:#c084fc;">👥 მომხმარებლები</h3>
+                <div id="admin-users-list"></div>
+            </div>
+            <button class="btn btn-red" style="margin-top:15px;" onclick="showScreen('selection-screen')">დახურვა</button>
+        </div>
+
+    </div>
+
+    <script>
+        // ==================== STATE & STORAGE ====================
+        let appData = JSON.parse(localStorage.getItem('quizAppData')) || {
+            users: {
+                "ალექსანდრე": { pass: "87654321", avatar: "👑", points: 9999, streak: 100, lastDate: "" }
+            },
+            settings: { timer: 10, globalMsg: "მოგესალმებით! ეს არის BETA ვერსია. ⭐️" },
+            customQs: { "1": { math: [], geo: [] }, "2": { math: [], geo: [] }, "3": { math: [], geo: [] }, "4": { math: [], geo: [] }, "5": { math: [], geo: [] } }
+        };
+
+        function saveData() { localStorage.setItem('quizAppData', JSON.stringify(appData)); }
+
+        let currentUser = null;
+        let isRegisterMode = false;
+        let selectedAvatar = "🦊";
+        
+        let quizTimer;
+        let timeLeft = 0;
+        let activeQs = [];
+        let currentQIndex = 0;
+        let sessionScore = 0;
+        let hintUsed = false;
+
+        // ==================== AUDIO SYSTEM (Web Audio API) ====================
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playSound(type) {
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain); gain.connect(audioCtx.destination);
+            
+            if(type === 'correct') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.1);
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+            } else {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(300, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.2);
+                gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+            }
+        }
+
+        // ==================== UI HELPERS ====================
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        // ==================== AUTH & PROFILE ====================
+        function toggleAuthMode() {
+            isRegisterMode = !isRegisterMode;
+            document.getElementById('auth-title').innerText = isRegisterMode ? 'რეგისტრაცია' : 'ავტორიზაცია';
+            document.getElementById('auth-toggle').innerText = isRegisterMode ? 'უკვე გაქვს ანგარიში? შედი' : 'არ გაქვს ანგარიში? დარეგისტრირდი';
+            document.getElementById('avatar-selection').style.display = isRegisterMode ? 'flex' : 'none';
+        }
+
+        function selectAvatar(emoji, el) {
+            selectedAvatar = emoji;
+            document.querySelectorAll('.avatar-opt').forEach(a => a.classList.remove('selected'));
+            el.classList.add('selected');
+        }
+
+        function handleAuth() {
+            const user = document.getElementById('username').value.trim();
+            const pass = document.getElementById('password').value.trim();
+            if(!user || !pass) return alert("შეავსეთ ველები!");
+
+            if(isRegisterMode) {
+                if(appData.users[user]) return alert("ეს სახელი უკვე დაკავებულია!");
+                appData.users[user] = { pass, avatar: selectedAvatar, points: 0, streak: 1, lastDate: new Date().toDateString() };
+                saveData();
+                loginUser(user);
+            } else {
+                if(!appData.users[user] || appData.users[user].pass !== pass) return alert("არასწორი სახელი ან პაროლი!");
+                loginUser(user);
+            }
+        }
+
+        function loginUser(user) {
+            currentUser = user;
+            const uData = appData.users[user];
+            
+            // Streak logic
+            let today = new Date().toDateString();
+            if(uData.lastDate !== today) {
+                uData.streak += 1; // Simplify streak logic for demo
+                uData.lastDate = today;
+                saveData();
+            }
+
+            document.getElementById('user-name-display').innerText = user;
+            document.getElementById('user-avatar').innerText = uData.avatar;
+            document.getElementById('user-points').innerText = uData.points;
+            document.getElementById('user-streak').innerText = uData.streak;
+            
+            document.getElementById('user-bar').style.display = 'flex';
+            document.getElementById('admin-btn').style.display = user === "ალექსანდრე" ? 'block' : 'none';
+            document.getElementById('global-msg-box').innerText = appData.settings.globalMsg;
+            
+            showScreen('selection-screen');
+        }
+
+        function handleLogout() {
+            currentUser = null;
+            document.getElementById('user-bar').style.display = 'none';
+            document.getElementById('username').value = "";
+            document.getElementById('password').value = "";
+            showScreen('auth-screen');
+        }
+
+        // ==================== QUIZ LOGIC ====================
+        function generateAutoQs(grade, subject) {
+            let qs = [];
+            for(let i=0; i<10; i++) {
+                if(subject === 'math') {
+                    let a = Math.floor(Math.random() * 10) + grade;
+                    let b = Math.floor(Math.random() * 10) + grade;
+                    let ans = a + b;
+                    let opts = [ans, ans+1, ans-1, ans+2].sort(() => Math.random() - 0.5);
+                    qs.push({ q: `${a} + ${b} = ?`, opts: opts.map(String), correctIdx: opts.indexOf(ans) });
+                } else {
+                    let words = ["სკოლა", "წიგნი", "კალამი", "რვეული"];
+                    let ans = words[Math.floor(Math.random()*words.length)];
+                    let opts = [ans, ans+"ა", ans+"იი", "შეცდომა"].sort(() => Math.random() - 0.5);
+                    qs.push({ q: `იპოვე სწორი სიტყვა:`, opts: opts, correctIdx: opts.indexOf(ans) });
+                }
+            }
+            return qs;
+        }
+
+        function startQuiz() {
+            const grade = document.getElementById('grade-select').value;
+            const subj = document.getElementById('subject-select').value;
+            
+            // შევაერთოთ ადმინის მიერ დამატებული კითხვები და ავტომატური კითხვები
+            activeQs = [...(appData.customQs[grade]?.[subj] || []), ...generateAutoQs(grade, subj)].slice(0, 10);
+            
+            currentQIndex = 0;
+            sessionScore = 0;
+            hintUsed = false;
+            document.getElementById('hint-btn').disabled = false;
+            document.getElementById('hint-btn').innerText = "💡 50/50 (1 დარჩა)";
+            
+            showScreen('quiz-screen');
+            loadQ();
+        }
+
+        function loadQ() {
+            clearInterval(quizTimer);
+            if(currentQIndex >= activeQs.length) return endQuiz();
+
+            const q = activeQs[currentQIndex];
+            document.getElementById('question-count').innerText = `კითხვა ${currentQIndex + 1} / ${activeQs.length}`;
+            document.getElementById('question-text').innerText = q.q;
+            
+            const cont = document.getElementById('options-container');
+            cont.innerHTML = "";
+            q.opts.forEach((opt, idx) => {
+                const b = document.createElement('button');
+                b.className = 'option-btn'; b.innerText = opt;
+                b.onclick = () => checkAns(idx, b);
+                cont.appendChild(b);
+            });
+
+            timeLeft = appData.settings.timer;
+            updateTimerUI();
+            quizTimer = setInterval(() => {
+                timeLeft -= 0.1;
+                updateTimerUI();
+                if(timeLeft <= 0) { clearInterval(quizTimer); playSound('wrong'); setTimeout(nextQ, 1000); }
+            }, 100);
+        }
+
+        function updateTimerUI() {
+            let p = Math.max(0, (timeLeft / appData.settings.timer) * 100);
+            document.getElementById('timer-bar-fill').style.width = p + "%";
+            document.getElementById('timer-text').innerText = `დრო: ${Math.ceil(timeLeft)}წმ`;
+        }
+
+        function useHint() {
+            if(hintUsed) return;
+            hintUsed = true;
+            document.getElementById('hint-btn').disabled = true;
+            document.getElementById('hint-btn').innerText = "💡 50/50 (გამოყენებულია)";
+            
+            const q = activeQs[currentQIndex];
+            const btns = document.querySelectorAll('.option-btn');
+            let hidden = 0;
+            btns.forEach((b, i) => {
+                if(i !== q.correctIdx && hidden < 2) {
+                    b.innerText = ""; b.disabled = true; hidden++;
+                }
+            });
+        }
+
+        function checkAns(idx, btn) {
+            clearInterval(quizTimer);
+            const q = activeQs[currentQIndex];
+            const btns = document.querySelectorAll('.option-btn');
+            btns.forEach(b => b.disabled = true);
+
+            if(idx === q.correctIdx) {
+                btn.classList.add('correct');
+                playSound('correct');
+                sessionScore += 10;
+            } else {
+                btn.classList.add('wrong');
+                btns[q.correctIdx].classList.add('correct');
+                playSound('wrong');
+            }
+            setTimeout(nextQ, 1000);
+        }
+
+        function nextQ() { currentQIndex++; loadQ(); }
+
+        function endQuiz() {
+            appData.users[currentUser].points += sessionScore;
+            saveData();
+            document.getElementById('user-points').innerText = appData.users[currentUser].points;
+            document.getElementById('final-score').innerText = sessionScore;
+            showScreen('final-screen');
+        }
+
+        // ==================== LEADERBOARD ====================
+        function renderLeaderboard() {
+            const list = document.getElementById('leaderboard-list');
+            list.innerHTML = "";
+            let usersArr = Object.keys(appData.users).map(k => ({ name: k, ...appData.users[k] }));
+            usersArr.sort((a,b) => b.points - a.points);
+            
+            usersArr.slice(0, 10).forEach((u, i) => {
+                list.innerHTML += `
+                    <div class="list-item">
+                        <span>${i+1}. ${u.avatar} <b>${u.name}</b></span>
+                        <span style="color:#22c55e;">${u.points} ქულა</span>
+                    </div>`;
+            });
+        }
+
+        // ==================== ADMIN PANEL ====================
+        function openAdmin() {
+            document.getElementById('admin-timer').value = appData.settings.timer;
+            document.getElementById('admin-msg').value = appData.settings.globalMsg;
+            renderAdminUsers();
+            showScreen('admin-screen');
+        }
+
+        function saveAdminSettings() {
+            appData.settings.timer = parseInt(document.getElementById('admin-timer').value);
+            appData.settings.globalMsg = document.getElementById('admin-msg').value;
+            saveData();
+            document.getElementById('global-msg-box').innerText = appData.settings.globalMsg;
+            alert("პარამეტრები შენახულია!");
+        }
+
+        function addCustomQuestion() {
+            let g = document.getElementById('add-q-grade').value;
+            let s = document.getElementById('add-q-subject').value;
+            let text = document.getElementById('add-q-text').value;
+            let o1 = document.getElementById('add-q-opt1').value;
+            let o2 = document.getElementById('add-q-opt2').value;
+            let o3 = document.getElementById('add-q-opt3').value;
+            let o4 = document.getElementById('add-q-opt4').value;
+
+            if(!text || !o1 || !o2 || !o3 || !o4) return alert("შეავსეთ ყველა ველი!");
+            
+            let opts = [o1, o2, o3, o4]; // o1 is correct
+            // Shuffle
+            let shuffled = opts.map(v => ({v, r: Math.random()})).sort((a,b)=>a.r-b.r).map(x=>x.v);
+            let cIdx = shuffled.indexOf(o1);
+
+            if(!appData.customQs[g]) appData.customQs[g] = { math: [], geo: [] };
+            appData.customQs[g][s].push({ q: text, opts: shuffled, correctIdx: cIdx });
+            saveData();
+            alert("კითხვა წარმატებით დაემატა!");
+            document.getElementById('add-q-text').value = "";
+        }
+
+        function renderAdminUsers() {
+            const list = document.getElementById('admin-users-list');
+            list.innerHTML = "";
+            Object.keys(appData.users).forEach(u => {
+                if(u === "ალექსანდრე") return;
+                list.innerHTML += `
+                    <div class="list-item">
+                        <span>${appData.users[u].avatar} ${u} (${appData.users[u].points}q)</span>
+                        <button class="btn-small btn-red" onclick="deleteUser('${u}')">წაშლა</button>
+                    </div>`;
+            });
+        }
+
+        function deleteUser(u) {
+            if(confirm("ნამდვილად გინდათ წაშლა?")) {
+                delete appData.users[u];
+                saveData();
+                renderAdminUsers();
+            }
+        }
+    </script>
+</body>
+</html>
